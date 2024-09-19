@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Webcam Fall Prediction</title>
+    <style>
+      body {
+        text-align: center;
+        font-family: Arial, sans-serif;
+      }
+      img {
+        width: 640px;
+        height: 480px;
+      }
+      .btn-ctrl {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        margin-top: 1.5rem;
+        gap: 12px;
+      }
+      #stop-btn {
+        padding: 12px 25px;
+        background-color: rgb(250, 71, 71);
+        border: none;
+        border-radius: 10px;
+        color: white;
+        font-size: 18px;
+      }
+      #start-btn {
+        padding: 12px 25px;
+        background-color: darkgreen;
+        border: none;
+        border-radius: 10px;
+        color: white;
+        font-size: 18px;
+      }
+      #testing {
+        display: flex;
+        justify-content: center;
+        margin-top: 2.5rem;
+      }
+      #video-feed {
+        border: 5px dotted #47624f;
+        padding: 1em;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Deep Learning for sensor-based fusion and activity recognition - Fall Detection</h1>
+    <p>Watch the live feed from your webcam and see real-time predictions.</p>
+
+    <!-- Video feed will be displayed here -->
+    <div id="testing">
+      <!-- Image tag where the webcam feed will be shown -->
+      <img id="video-feed" src="" alt="Webcam Feed" style="display: none" />
+    </div>
+
+    <!-- Control buttons -->
+    <div class="btn-ctrl">
+      <button id="start-btn">Start Feed</button>
+      <button id="stop-btn" disabled>Stop Feed</button>
+    </div>
+
+    <!-- Internal JavaScript -->
+    <script>
+      let startBtn = document.getElementById("start-btn");
+      let stopBtn = document.getElementById("stop-btn");
+      let videoFeed = document.getElementById("video-feed");
+      let intervalId;
+
+      // Function to start the webcam feed
+      startBtn.addEventListener("click", () => {
+        // Show the video feed element and set the source to the video feed endpoint
+        videoFeed.style.display = "block";
+        videoFeed.src = "/video_feed?" + new Date().getTime(); // Add timestamp to avoid caching
+
+        // Update buttons
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+
+        // Update the video feed every second to refresh the image
+        intervalId = setInterval(() => {
+          videoFeed.src = "/video_feed?" + new Date().getTime(); // Fetch new frame
+        }, 1000);
+      });
+
+      // Function to stop the webcam feed
+      stopBtn.addEventListener("click", () => {
+        // Stop the video feed and clear the interval
+        clearInterval(intervalId);
+        videoFeed.style.display = "none"; // Hide the video feed
+
+        // Update buttons
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+
+        // Send a request to the server to release the camera
+        fetch("/stop_feed")
+          .then((response) => response.text())
+          .then((data) => {
+            console.log("Camera stopped: ", data);
+
+            // After stopping the camera, shutdown the server
+            fetch("/shutdown", { method: "POST" })
+              .then((response) => response.text())
+              .then((data) => {
+                console.log("Server shutting down: ", data);
+              })
+              .catch((error) =>
+                console.error("Error shutting down the server: ", error)
+              );
+          })
+          .catch((error) =>
+            console.error("Error stopping the camera: ", error)
+          );
+      });
+    </script>
+  </body>
+</html>
