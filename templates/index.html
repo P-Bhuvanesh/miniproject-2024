@@ -66,56 +66,51 @@
     <!-- Internal JavaScript -->
     <script>
       let startBtn = document.getElementById("start-btn");
-      let stopBtn = document.getElementById("stop-btn");
-      let videoFeed = document.getElementById("video-feed");
-      let intervalId;
+let stopBtn = document.getElementById("stop-btn");
+let videoFeed = document.getElementById("video-feed");
 
-      // Function to start the webcam feed
-      startBtn.addEventListener("click", () => {
-        // Show the video feed element and set the source to the video feed endpoint
-        videoFeed.style.display = "block";
-        videoFeed.src = "/video_feed?" + new Date().getTime(); // Add timestamp to avoid caching
+// Function to start the webcam feed
+startBtn.addEventListener("click", () => {
+  // Show the video feed element and set the source to the video feed endpoint
+  videoFeed.style.display = "block";
+  videoFeed.src = "/video_feed?" + new Date().getTime(); // Add timestamp to avoid caching
 
-        // Update buttons
-        startBtn.disabled = true;
-        stopBtn.disabled = false;
+  // Update buttons
+  startBtn.disabled = true;
+  stopBtn.disabled = false;
+});
 
-        // Update the video feed every second to refresh the image
-        intervalId = setInterval(() => {
-          videoFeed.src = "/video_feed?" + new Date().getTime(); // Fetch new frame
-        }, 1000);
-      });
+// Function to stop the webcam feed
+stopBtn.addEventListener("click", () => {
+  // Hide the video feed element
+  videoFeed.style.display = "none";
+  videoFeed.src = ""; // Clear the video source
 
-      // Function to stop the webcam feed
-      stopBtn.addEventListener("click", () => {
-        // Stop the video feed and clear the interval
-        clearInterval(intervalId);
-        videoFeed.style.display = "none"; // Hide the video feed
+  // Update buttons
+  startBtn.disabled = false;
+  stopBtn.disabled = true;
 
-        // Update buttons
-        startBtn.disabled = false;
-        stopBtn.disabled = true;
+  // Send a request to the server to release the camera
+  fetch("/stop_feed")
+    .then((response) => response.text())
+    .then((data) => {
+      console.log("Camera stopped: ", data);
+    })
+    .catch((error) => console.error("Error stopping the camera: ", error));
+});
 
-        // Send a request to the server to release the camera
-        fetch("/stop_feed")
-          .then((response) => response.text())
-          .then((data) => {
-            console.log("Camera stopped: ", data);
+// Optionally, you can have a separate button for shutting down the server if needed
+// For example:
+// let shutdownBtn = document.getElementById("shutdown-btn");
+// shutdownBtn.addEventListener("click", () => {
+//   fetch("/shutdown", { method: "POST" })
+//     .then((response) => response.text())
+//     .then((data) => {
+//       console.log("Server shutting down: ", data);
+//     })
+//     .catch((error) => console.error("Error shutting down the server: ", error));
+// });
 
-            // After stopping the camera, shutdown the server
-            fetch("/shutdown", { method: "POST" })
-              .then((response) => response.text())
-              .then((data) => {
-                console.log("Server shutting down: ", data);
-              })
-              .catch((error) =>
-                console.error("Error shutting down the server: ", error)
-              );
-          })
-          .catch((error) =>
-            console.error("Error stopping the camera: ", error)
-          );
-      });
     </script>
   </body>
 </html>
