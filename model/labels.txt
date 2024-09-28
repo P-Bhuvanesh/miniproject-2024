@@ -1,2 +1,3 @@
-0 Normal
-1 Fall
+0 Sitting
+1 Standing
+2 Fall
